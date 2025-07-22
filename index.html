@@ -9,7 +9,6 @@
       font-family: Arial, sans-serif;
       padding: 20px;
       background: #f0f4f9;
-      display: none;
     }
     h1 { text-align: center; color: #4a4a4a; }
     #chatbox {
@@ -46,10 +45,6 @@
     <button onclick="resumeSpeech()">▶️ Resume</button>
     <button onclick="clearChat()">🗑️ Clear</button>
     <input type="file" accept=".txt,.pdf,.png,.jpg,.jpeg" onchange="handleFileUpload(event)" />
-    <select id="voiceSelect">
-      <option value="en-IN">English (India)</option>
-      <option value="hi-IN">Hindi (India)</option>
-    </select>
     <select id="roleSelect">
       <option value="Student">Student</option>
       <option value="Teacher">Teacher</option>
@@ -61,28 +56,14 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
   <script>
-    // 🔐 Login
-    window.onload = function () {
-      const user = prompt("Enter User ID:");
-      const pass = prompt("Enter Password:");
-      if (user === "demo" && pass === "demo@234") {
-        document.body.style.display = "block";
-        appendMessage("Kritika", "Hi! I'm Kritika, your spoken English tutor.");
-        speak("Hi! I'm Kritika, your spoken English tutor.");
-      } else {
-        alert("Access Denied");
-        document.body.innerHTML = "<h2 style='color:red;text-align:center;'>Unauthorized Access</h2>";
-      }
-    };
-
     const apiKey = "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";
     const chatbox = document.getElementById("chatbox");
     const inputField = document.getElementById("textInput");
-    const voiceSelect = document.getElementById("voiceSelect");
     const roleSelect = document.getElementById("roleSelect");
     let currentUtterance = null;
     let lastSpokenText = "";
 
+    // Append chat message
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
       msg.className = "message " + (sender === "You" ? "user" : "bot");
@@ -91,6 +72,7 @@
       chatbox.scrollTop = chatbox.scrollHeight;
     }
 
+    // Send message to AI
     async function sendMessage() {
       const message = inputField.value.trim();
       if (!message) return;
@@ -127,25 +109,21 @@
       }
     }
 
+    // Speak using Indian female voice
     function speak(text) {
       if (speechSynthesis.speaking) speechSynthesis.cancel();
       currentUtterance = new SpeechSynthesisUtterance(text);
-      currentUtterance.lang = voiceSelect.value;
-      const voices = speechSynthesis.getVoices().filter(v => v.lang === voiceSelect.value && v.name.includes("Female"));
-      currentUtterance.voice = voices[0] || speechSynthesis.getVoices()[0];
+      currentUtterance.lang = "en-IN";
+
+      const voices = speechSynthesis.getVoices();
+      const indianFemale = voices.find(v => v.name.toLowerCase().includes("female") && v.lang === "en-IN");
+      currentUtterance.voice = indianFemale || voices.find(v => v.lang === "en-IN") || voices[0];
+
       speechSynthesis.speak(currentUtterance);
     }
 
-    function startListening() {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = voiceSelect.value;
-      recognition.interimResults = false;
-      recognition.onresult = function (event) {
-        inputField.value = event.results[0][0].transcript;
-        sendMessage();
-      };
-      recognition.onerror = function (e) { console.error("Speech error:", e.error); };
-      recognition.start();
+    function repeatLast() {
+      if (lastSpokenText) speak(lastSpokenText);
     }
 
     function pauseSpeech() {
@@ -156,15 +134,25 @@
       if (speechSynthesis.paused) speechSynthesis.resume();
     }
 
-    function repeatLast() {
-      if (lastSpokenText) speak(lastSpokenText);
-    }
-
     function clearChat() {
       chatbox.innerHTML = "";
       appendMessage("Kritika", "Hi! I'm Kritika, your spoken English tutor.");
     }
 
+    // Speech recognition
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-IN";
+      recognition.interimResults = false;
+      recognition.onresult = function (event) {
+        inputField.value = event.results[0][0].transcript;
+        sendMessage();
+      };
+      recognition.onerror = function (e) { console.error("Speech error:", e.error); };
+      recognition.start();
+    }
+
+    // File upload handling
     async function handleFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -198,6 +186,13 @@
         alert("Unsupported file type.");
       }
     }
+
+    // Init voice preload
+    window.speechSynthesis.onvoiceschanged = () => {};
+    window.onload = () => {
+      appendMessage("Kritika", "Hi! I'm Kritika, your spoken English tutor.");
+      speak("Hi! I'm Kritika, your spoken English tutor.");
+    };
   </script>
 </body>
 </html>
