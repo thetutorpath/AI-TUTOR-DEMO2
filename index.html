@@ -1,109 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI English Tutor - Kritika</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f8f8f8;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    h1 {
-      color: #d00087;
-    }
-    textarea {
-      width: 90%;
-      height: 100px;
-      font-size: 16px;
-      margin: 10px auto;
-      display: block;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 10px;
-      border: none;
-    }
-    #speakBtn {
-      background-color: purple;
-      color: white;
-    }
-    #clearBtn {
-      background-color: yellow;
-      color: black;
-    }
-    .chat-mode-btn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #6200ea;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #aiCharacter {
-      width: 250px;
-      margin: 20px auto;
-      display: block;
-      animation: idleBlink 3s infinite;
-    }
-    @keyframes idleBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.9; }
-    }
-  </style>
-</head>
-<body>
-  <h1>🤖 AI English Tutor - Kritika</h1>
-  <button class="chat-mode-btn" onclick="toggleMode()">Switch to Chat Mode</button>
-  <img id="aiCharacter" src="https://raw.githubusercontent.com/thetutorpath/AI-TUTOR/main/assets/kritika.png" alt="Kritika AI Tutor" />
-  <textarea id="userInput" placeholder="Type your message here..."></textarea>
-  <button id="speakBtn" onclick="speakText()">🔊 Speak</button>
-  <button id="clearBtn" onclick="clearText()">🧹 Clear</button>
-
-  <script>
-    let synth = window.speechSynthesis;
-    let voices = [];
-
-    function loadVoices() {
-      voices = synth.getVoices();
-      if (voices.length === 0) {
-        setTimeout(loadVoices, 100);
+    @keyframes bounceIn {
+      0% {
+        transform: scale(0.9);
+        opacity: 0;
+      }
+      60% {
+        transform: scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
       }
     }
 
-    loadVoices();
+    .animate-reply {
+      animation: bounceIn 0.6s ease;
+    }
+  </style>
+</head>
 
-    function speakText() {
-      const text = document.getElementById("userInput").value;
-      if (!text) return;
+<body class="bg-gray-100">
+  <div class="max-w-4xl mx-auto py-8 px-4">
+    <div class="flex items-center mb-4">
+      <img src="https://img.icons8.com/emoji/48/brain-emoji.png" alt="Tutor Icon" class="w-10 h-10 mr-2">
+      <h1 class="text-2xl font-bold">AI English Tutor - Kritika</h1>
+    </div>
 
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "hi-IN";
-      const femaleVoice = voices.find(
-        v => v.lang === "hi-IN" && v.name.toLowerCase().includes("female")
-      ) || voices.find(v => v.lang === "hi-IN");
+    <div class="mb-4">
+      <button id="switchModeBtn" class="bg-purple-600 text-white px-4 py-2 rounded">Switch to Whiteboard Mode</button>
+    </div>
 
-      if (femaleVoice) utter.voice = femaleVoice;
-      synth.speak(utter);
+    <div class="mb-4">
+      <textarea id="inputText" rows="4" placeholder="Type your message here..." class="w-full p-2 border border-gray-300 rounded"></textarea>
+    </div>
+
+    <div class="flex space-x-4 mb-4">
+      <button id="speakBtn" class="bg-purple-600 text-white px-4 py-2 rounded">🔊 Speak</button>
+      <button id="clearBtn" class="bg-yellow-500 text-white px-4 py-2 rounded">🧹 Clear</button>
+    </div>
+
+    <div id="response" class="p-4 bg-white rounded shadow mb-4 min-h-[80px]"></div>
+
+    <div class="mt-6">
+      <img src="https://thetutorpath.github.io/AI-TUTOR-DEMO2/kritika.png" alt="AI Tutor Kritika" class="w-40 h-auto mx-auto rounded-xl border border-gray-300 shadow-md">
+    </div>
+  </div>
+
+  <script>
+    const inputText = document.getElementById("inputText");
+    const speakBtn = document.getElementById("speakBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const responseDiv = document.getElementById("response");
+
+    async function getAIResponse(message) {
+      responseDiv.innerHTML = "<em>Thinking...</em>";
+      const reply = `You said: "${message}". Here's a helpful response.`;
+      await speak(reply);
+      responseDiv.innerHTML = `<div class='animate-reply'>${reply}</div>`;
     }
 
-    function clearText() {
-      document.getElementById("userInput").value = "";
+    function speak(text) {
+      return new Promise((resolve) => {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        const voices = synth.getVoices();
+        const hindiVoice = voices.find(v => v.lang.startsWith("hi") && v.name.toLowerCase().includes("female")) ||
+                           voices.find(v => v.lang.startsWith("hi")) ||
+                           voices.find(v => v.name.toLowerCase().includes("female"));
+        if (hindiVoice) utterance.voice = hindiVoice;
+
+        utterance.onend = () => resolve();
+        synth.speak(utterance);
+      });
     }
 
-    function toggleMode() {
-      alert("Switching modes is not implemented yet.");
-    }
+    speakBtn.addEventListener("click", async () => {
+      const message = inputText.value.trim();
+      if (message) await getAIResponse(message);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      inputText.value = "";
+      responseDiv.innerHTML = "";
+    });
   </script>
 </body>
+
 </html>
