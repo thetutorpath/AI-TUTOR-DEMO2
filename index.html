@@ -2,111 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Tutor - Kritika</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI English Tutor - Kritika</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
+      background: #f8f8f8;
+      margin: 0;
+      padding: 0;
+      text-align: center;
     }
-    #chat, #whiteboard {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      min-height: 200px;
-      background: #fff;
-      margin-bottom: 20px;
+    h1 {
+      color: #d00087;
     }
     textarea {
-      width: 100%;
+      width: 90%;
+      height: 100px;
+      font-size: 16px;
+      margin: 10px auto;
+      display: block;
       padding: 10px;
+      border: 1px solid #ccc;
       border-radius: 5px;
     }
     button {
-      padding: 10px 15px;
-      margin: 5px;
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 10px;
       border: none;
-      border-radius: 5px;
-      background-color: #007bff;
+    }
+    #speakBtn {
+      background-color: purple;
       color: white;
+    }
+    #clearBtn {
+      background-color: yellow;
+      color: black;
+    }
+    .chat-mode-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #6200ea;
+      color: white;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #0056b3;
+    #aiCharacter {
+      width: 250px;
+      margin: 20px auto;
+      display: block;
+      animation: idleBlink 3s infinite;
     }
-    #mode-switch {
-      margin-bottom: 10px;
+    @keyframes idleBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.9; }
     }
   </style>
 </head>
 <body>
-  <h2>🧠 AI English Tutor - Kritika</h2>
+  <h1>🤖 AI English Tutor - Kritika</h1>
+  <button class="chat-mode-btn" onclick="toggleMode()">Switch to Chat Mode</button>
+  <img id="aiCharacter" src="https://raw.githubusercontent.com/thetutorpath/AI-TUTOR/main/assets/kritika.png" alt="Kritika AI Tutor" />
+  <textarea id="userInput" placeholder="Type your message here..."></textarea>
+  <button id="speakBtn" onclick="speakText()">🔊 Speak</button>
+  <button id="clearBtn" onclick="clearText()">🧹 Clear</button>
 
-  <button id="mode-switch" onclick="toggleMode()">Switch to Whiteboard Mode</button>
-
-  <div id="chat">
-    <textarea id="chatText" rows="4">Hello! मैं Kritika हूँ, आपकी AI English Tutor!</textarea><br>
-    <button onclick="speakText()">🔊 Speak</button>
-    <button onclick="repeatText()">🔁 Repeat</button>
-    <button onclick="translateToHindi()">🌐 Translate to Hindi</button>
-  </div>
-
-  <div id="whiteboard" style="display:none;">
-    <textarea id="whiteboardText" rows="6" placeholder="AI Answer or Student Writing"></textarea><br>
-    <button onclick="speakWhiteboard()">🔊 Speak</button>
-    <button onclick="clearWhiteboard()">🧹 Clear</button>
-  </div>
-
-  <script src="https://code.responsivevoice.org/responsivevoice.js?key=free"></script>
   <script>
-    let currentMode = 'chat';
-    let lastSpoken = '';
+    let synth = window.speechSynthesis;
+    let voices = [];
 
-    function toggleMode() {
-      if (currentMode === 'chat') {
-        document.getElementById('chat').style.display = 'none';
-        document.getElementById('whiteboard').style.display = 'block';
-        document.getElementById('mode-switch').innerText = 'Switch to Chat Mode';
-        currentMode = 'whiteboard';
-      } else {
-        document.getElementById('chat').style.display = 'block';
-        document.getElementById('whiteboard').style.display = 'none';
-        document.getElementById('mode-switch').innerText = 'Switch to Whiteboard Mode';
-        currentMode = 'chat';
+    function loadVoices() {
+      voices = synth.getVoices();
+      if (voices.length === 0) {
+        setTimeout(loadVoices, 100);
       }
     }
+
+    loadVoices();
 
     function speakText() {
-      const text = document.getElementById("chatText").value;
-      lastSpoken = text;
-      responsiveVoice.speak(text, "Hindi Female", { rate: 0.95 });
+      const text = document.getElementById("userInput").value;
+      if (!text) return;
+
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "hi-IN";
+      const femaleVoice = voices.find(
+        v => v.lang === "hi-IN" && v.name.toLowerCase().includes("female")
+      ) || voices.find(v => v.lang === "hi-IN");
+
+      if (femaleVoice) utter.voice = femaleVoice;
+      synth.speak(utter);
     }
 
-    function repeatText() {
-      if (lastSpoken) {
-        responsiveVoice.speak(lastSpoken, "Hindi Female", { rate: 0.95 });
-      }
+    function clearText() {
+      document.getElementById("userInput").value = "";
     }
 
-    function translateToHindi() {
-      const original = document.getElementById("chatText").value;
-      fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(original)}`)
-        .then(res => res.json())
-        .then(data => {
-          const translated = data[0].map(pair => pair[0]).join(" ");
-          document.getElementById("chatText").value = translated;
-          speakText();
-        });
-    }
-
-    function speakWhiteboard() {
-      const wbText = document.getElementById("whiteboardText").value;
-      lastSpoken = wbText;
-      responsiveVoice.speak(wbText, "Hindi Female", { rate: 0.95 });
-    }
-
-    function clearWhiteboard() {
-      document.getElementById("whiteboardText").value = "";
+    function toggleMode() {
+      alert("Switching modes is not implemented yet.");
     }
   </script>
 </body>
