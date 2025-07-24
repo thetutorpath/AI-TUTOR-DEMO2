@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI English Tutor - Kritika</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-
 <body class="bg-gray-100">
   <div class="max-w-4xl mx-auto py-8 px-4">
     <div class="flex items-center mb-4">
@@ -16,15 +14,11 @@
     </div>
 
     <div class="mb-4">
-      <button id="switchModeBtn" class="bg-purple-600 text-white px-4 py-2 rounded">Switch to Whiteboard Mode</button>
-    </div>
-
-    <div class="mb-4">
       <textarea id="inputText" rows="4" placeholder="Type your message here..." class="w-full p-2 border border-gray-300 rounded"></textarea>
     </div>
 
     <div class="flex space-x-4 mb-4">
-      <button id="speakBtn" class="bg-purple-600 text-white px-4 py-2 rounded">🔊 Speak</button>
+      <button id="askBtn" class="bg-purple-600 text-white px-4 py-2 rounded">💬 Ask</button>
       <button id="clearBtn" class="bg-yellow-500 text-white px-4 py-2 rounded">🧹 Clear</button>
     </div>
 
@@ -32,7 +26,7 @@
 
     <div class="mt-6 text-center">
       <div class="relative w-40 h-60 mx-auto">
-        <img id="kritikaStatic" src="https://thetutorpath.github.io/AI-TUTOR-DEMO2/kritika.png" alt="AI Tutor Kritika" class="w-full h-auto rounded-xl border border-gray-300 shadow-md">
+        <img id="kritikaStatic" src="https://thetutorpath.github.io/AI-TUTOR-DEMO2/kritika.png" alt="Kritika" class="w-full h-auto rounded-xl border border-gray-300 shadow-md">
         <img id="kritikaTalking" src="https://media.giphy.com/media/f9k1tV7HyORcngKF8v/giphy.gif" alt="Speaking Animation" class="w-full h-auto rounded-xl border border-gray-300 shadow-md absolute top-0 left-0 hidden">
       </div>
     </div>
@@ -40,29 +34,61 @@
 
   <script>
     const inputText = document.getElementById("inputText");
-    const speakBtn = document.getElementById("speakBtn");
+    const askBtn = document.getElementById("askBtn");
     const clearBtn = document.getElementById("clearBtn");
     const responseDiv = document.getElementById("response");
     const kritikaStatic = document.getElementById("kritikaStatic");
     const kritikaTalking = document.getElementById("kritikaTalking");
 
-    async function getAIResponse(message) {
+    const API_KEY = "YOUR_API_KEY_HERE"; // 🔐 Paste your OpenRouter or OpenAI key here
+
+    askBtn.addEventListener("click", async () => {
+      const message = inputText.value.trim();
+      if (!message) return;
+
       responseDiv.innerHTML = "<em>Thinking...</em>";
-      const reply = `You said: "${message}". Here's a helpful response.`;
-      await speak(reply);
+      const reply = await getAIResponse(message);
       responseDiv.textContent = reply;
+      await speak(reply);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      inputText.value = "";
+      responseDiv.innerHTML = "";
+    });
+
+    async function getAIResponse(userMessage) {
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-3.5-turbo",
+            messages: [{ role: "user", content: userMessage }],
+          }),
+        });
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || "Sorry, I couldn't respond.";
+      } catch (error) {
+        console.error(error);
+        return "Error getting response from AI.";
+      }
     }
 
     function speak(text) {
       return new Promise((resolve) => {
         const synth = window.speechSynthesis;
         const utterance = new SpeechSynthesisUtterance(text);
-
         const voices = synth.getVoices();
-        const hindiVoice = voices.find(v => v.lang.startsWith("hi") && v.name.toLowerCase().includes("female")) ||
-                           voices.find(v => v.lang.startsWith("hi")) ||
-                           voices.find(v => v.name.toLowerCase().includes("female"));
-        if (hindiVoice) utterance.voice = hindiVoice;
+
+        const hindiFemaleVoice = voices.find(v =>
+          v.lang.startsWith("hi") && v.name.toLowerCase().includes("female")
+        ) || voices.find(v => v.lang.startsWith("hi")) || voices.find(v => v.name.toLowerCase().includes("female"));
+
+        if (hindiFemaleVoice) utterance.voice = hindiFemaleVoice;
 
         utterance.onstart = () => {
           kritikaStatic.classList.add("hidden");
@@ -78,17 +104,6 @@
         synth.speak(utterance);
       });
     }
-
-    speakBtn.addEventListener("click", async () => {
-      const message = inputText.value.trim();
-      if (message) await getAIResponse(message);
-    });
-
-    clearBtn.addEventListener("click", () => {
-      inputText.value = "";
-      responseDiv.innerHTML = "";
-    });
   </script>
 </body>
-
 </html>
