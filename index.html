@@ -1,152 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI English Tutor - Kritika</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f3f7;
-      text-align: center;
-      padding: 30px;
-    }
-
-    h2 {
-      color: #000;
-    }
-
-    textarea {
-      width: 60%;
-      height: 100px;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      border: 1px solid #aaa;
-    }
-
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-    }
-
-    #speakBtn {
-      background-color: purple;
-      color: white;
-    }
-
-    #clearBtn {
-      background-color: orange;
-      color: white;
-    }
-
-    #response {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #fff;
-      display: inline-block;
-      border-radius: 10px;
-      min-width: 300px;
-    }
-
-    .animate-bounce-in {
-      animation: bounce-in 0.4s ease;
-    }
-
-    @keyframes bounce-in {
-      0% { transform: scale(0.8); opacity: 0; }
-      60% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-
-    #kritika {
-      margin-top: 20px;
-      max-width: 200px;
-      border-radius: 20px;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
-<body>
-  <h2>🧠 AI English Tutor - Kritika</h2>
-  
-  <textarea id="userInput" placeholder="Type your question..."></textarea><br/>
-  
-  <button id="speakBtn">🔊 Speak</button>
-  <button id="clearBtn">🧹 Clear</button>
+<body class="bg-gray-100">
+  <div class="max-w-4xl mx-auto py-8 px-4">
+    <div class="flex items-center mb-4">
+      <img src="https://img.icons8.com/emoji/48/brain-emoji.png" alt="Tutor Icon" class="w-10 h-10 mr-2">
+      <h1 class="text-2xl font-bold">AI English Tutor - Kritika</h1>
+    </div>
 
-  <div id="response"></div>
+    <div class="mb-4">
+      <button id="switchModeBtn" class="bg-purple-600 text-white px-4 py-2 rounded">Switch to Whiteboard Mode</button>
+    </div>
 
-  <!-- AI Tutor Image -->
-  <div>
-    <img id="kritika" src="https://cdn.pixabay.com/photo/2024/01/14/12/06/ai-8507621_1280.png" alt="AI Tutor Kritika" />
-    <!-- 🔄 Replace above with your animated Kritika URL if available -->
+    <div class="mb-4">
+      <textarea id="inputText" rows="4" placeholder="Type your message here..." class="w-full p-2 border border-gray-300 rounded"></textarea>
+    </div>
+
+    <div class="flex space-x-4 mb-4">
+      <button id="speakBtn" class="bg-purple-600 text-white px-4 py-2 rounded">🔊 Speak</button>
+      <button id="clearBtn" class="bg-yellow-500 text-white px-4 py-2 rounded">🧹 Clear</button>
+    </div>
+
+    <div id="response" class="p-4 bg-white rounded shadow mb-4 min-h-[80px]"></div>
+
+    <div class="mt-6 text-center">
+      <div class="relative w-40 h-60 mx-auto">
+        <img id="kritikaStatic" src="https://thetutorpath.github.io/AI-TUTOR-DEMO2/kritika.png" alt="AI Tutor Kritika" class="w-full h-auto rounded-xl border border-gray-300 shadow-md">
+        <img id="kritikaTalking" src="https://media.giphy.com/media/f9k1tV7HyORcngKF8v/giphy.gif" alt="Speaking Animation" class="w-full h-auto rounded-xl border border-gray-300 shadow-md absolute top-0 left-0 hidden">
+      </div>
+    </div>
   </div>
 
   <script>
-    const userInput = document.getElementById("userInput");
-    const responseDiv = document.getElementById("response");
+    const inputText = document.getElementById("inputText");
     const speakBtn = document.getElementById("speakBtn");
     const clearBtn = document.getElementById("clearBtn");
-
-    speakBtn.addEventListener("click", () => {
-      const message = userInput.value.trim();
-      if (message) getAIResponse(message);
-    });
-
-    clearBtn.addEventListener("click", () => {
-      userInput.value = "";
-      responseDiv.textContent = "";
-    });
+    const responseDiv = document.getElementById("response");
+    const kritikaStatic = document.getElementById("kritikaStatic");
+    const kritikaTalking = document.getElementById("kritikaTalking");
 
     async function getAIResponse(message) {
       responseDiv.innerHTML = "<em>Thinking...</em>";
-
-      try {
-        const response = await fetch("https://api.aiproxy.io/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer free"
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [
-              { role: "system", content: "You are a helpful female English tutor named Kritika." },
-              { role: "user", content: message }
-            ]
-          })
-        });
-
-        const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't understand.";
-        
-        responseDiv.textContent = reply;
-        responseDiv.classList.add("animate-bounce-in");
-        await speak(reply);
-      } catch (err) {
-        responseDiv.textContent = "⚠️ Error getting response.";
-        console.error(err);
-      }
+      const reply = `You said: "${message}". Here's a helpful response.`;
+      await speak(reply);
+      responseDiv.textContent = reply;
     }
 
-    async function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-IN";
-      utterance.pitch = 1;
-      utterance.rate = 0.95;
+    function speak(text) {
+      return new Promise((resolve) => {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
 
-      // Optional: Set female voice if available
-      const voices = speechSynthesis.getVoices();
-      const femaleVoice = voices.find(v => v.name.includes("Female") || v.name.includes("Google UK English Female"));
-      if (femaleVoice) utterance.voice = femaleVoice;
+        const voices = synth.getVoices();
+        const hindiVoice = voices.find(v => v.lang.startsWith("hi") && v.name.toLowerCase().includes("female")) ||
+                           voices.find(v => v.lang.startsWith("hi")) ||
+                           voices.find(v => v.name.toLowerCase().includes("female"));
+        if (hindiVoice) utterance.voice = hindiVoice;
 
-      speechSynthesis.speak(utterance);
+        utterance.onstart = () => {
+          kritikaStatic.classList.add("hidden");
+          kritikaTalking.classList.remove("hidden");
+        };
+
+        utterance.onend = () => {
+          kritikaTalking.classList.add("hidden");
+          kritikaStatic.classList.remove("hidden");
+          resolve();
+        };
+
+        synth.speak(utterance);
+      });
     }
+
+    speakBtn.addEventListener("click", async () => {
+      const message = inputText.value.trim();
+      if (message) await getAIResponse(message);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      inputText.value = "";
+      responseDiv.innerHTML = "";
+    });
   </script>
 </body>
+
 </html>
