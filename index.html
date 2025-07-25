@@ -4,13 +4,44 @@
   <meta charset="UTF-8">
   <title>AI English Tutor - Kritika</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 30px; }
-    textarea { width: 60%; height: 100px; padding: 10px; font-size: 16px; }
-    button { padding: 10px 20px; margin: 10px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+      padding: 30px;
+    }
+    textarea {
+      width: 60%;
+      height: 100px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
     #askBtn { background: purple; color: white; }
     #clearBtn { background: orange; color: white; }
-    #responseBox { margin-top: 20px; background: #fff; padding: 20px; width: 60%; margin-left: auto; margin-right: auto; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    #kritika-img { margin-top: 20px; }
+    #pauseBtn { background: teal; color: white; }
+    #resumeBtn { background: #5555ff; color: white; }
+    #repeatBtn { background: green; color: white; }
+    #responseBox {
+      margin-top: 20px;
+      background: #fff;
+      padding: 20px;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    #kritika-img {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -20,19 +51,24 @@
   <textarea id="userInput" placeholder="Type your message..."></textarea><br>
   <button id="askBtn">💬 Ask</button>
   <button id="clearBtn">🧹 Clear</button>
+  <button id="pauseBtn">⏸ Pause</button>
+  <button id="resumeBtn">▶ Resume</button>
+  <button id="repeatBtn">🔁 Repeat</button>
 
   <div id="responseBox">Waiting for your question...</div>
 
   <div id="kritika-img">
-    <img id="kritikaImage" src="https://i.gifer.com/7efs.gif" width="120" alt="Kritika" />
+    <img id="kritikaImage" src="https://i.postimg.cc/jdZfLsm9/kritika-still.png" width="120" alt="Kritika" />
     <div><b>Kritika</b></div>
   </div>
 
   <script>
-    const apiKey = "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";
- // 🔁 Replace this with your OpenRouter API key
+    const apiKey = "sk-or-v1-xxxxx"; // ✅ Replace this with your actual OpenRouter API key
     const endpoint = "https://openrouter.ai/api/v1/chat/completions";
     const model = "openchat/openchat-7b:free";
+
+    let lastReply = "";
+    let currentUtterance = null;
 
     document.getElementById("askBtn").onclick = async function () {
       const userMessage = document.getElementById("userInput").value.trim();
@@ -65,25 +101,53 @@
 
       const data = await response.json();
       const reply = data.choices[0].message.content;
+      lastReply = reply;
       document.getElementById("responseBox").innerText = reply;
 
-      // Text-to-Speech
-      const utter = new SpeechSynthesisUtterance(reply);
-      utter.lang = "en-IN";
-      utter.pitch = 1.1;
-      utter.rate = 1;
-      speechSynthesis.speak(utter);
-
-      // Reset Kritika image to still
-      utter.onend = () => {
-        document.getElementById("kritikaImage").src = "https://i.postimg.cc/jdZfLsm9/kritika-still.png";
-      };
+      // Speak the reply
+      speak(reply);
     };
 
     document.getElementById("clearBtn").onclick = function () {
       document.getElementById("userInput").value = "";
       document.getElementById("responseBox").innerText = "Waiting for your question...";
+      speechSynthesis.cancel();
+      document.getElementById("kritikaImage").src = "https://i.postimg.cc/jdZfLsm9/kritika-still.png";
     };
+
+    document.getElementById("pauseBtn").onclick = function () {
+      speechSynthesis.pause();
+    };
+
+    document.getElementById("resumeBtn").onclick = function () {
+      speechSynthesis.resume();
+    };
+
+    document.getElementById("repeatBtn").onclick = function () {
+      if (lastReply) speak(lastReply);
+    };
+
+    function speak(text) {
+      if (!text) return;
+
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+      }
+
+      const utter = new SpeechSynthesisUtterance(text);
+      currentUtterance = utter;
+      utter.lang = "en-IN";
+      utter.pitch = 1.1;
+      utter.rate = 1;
+
+      document.getElementById("kritikaImage").src = "https://i.gifer.com/7efs.gif";
+
+      utter.onend = () => {
+        document.getElementById("kritikaImage").src = "https://i.postimg.cc/jdZfLsm9/kritika-still.png";
+      };
+
+      speechSynthesis.speak(utter);
+    }
   </script>
 </body>
 </html>
