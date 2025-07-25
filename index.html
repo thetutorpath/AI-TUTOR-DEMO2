@@ -1,109 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>AI English Tutor - Kritika</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 30px; }
+    textarea { width: 60%; height: 100px; padding: 10px; font-size: 16px; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; }
+    #askBtn { background: purple; color: white; }
+    #clearBtn { background: orange; color: white; }
+    #responseBox { margin-top: 20px; background: #fff; padding: 20px; width: 60%; margin-left: auto; margin-right: auto; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    #kritika-img { margin-top: 20px; }
+  </style>
 </head>
-<body class="bg-gray-100">
-  <div class="max-w-4xl mx-auto py-8 px-4">
-    <div class="flex items-center mb-4">
-      <img src="https://img.icons8.com/emoji/48/brain-emoji.png" alt="Tutor Icon" class="w-10 h-10 mr-2">
-      <h1 class="text-2xl font-bold">AI English Tutor - Kritika</h1>
-    </div>
+<body>
 
-    <div class="mb-4">
-      <textarea id="inputText" rows="4" placeholder="Type your message here..." class="w-full p-2 border border-gray-300 rounded"></textarea>
-    </div>
+  <h2>🧠 AI English Tutor - Kritika</h2>
 
-    <div class="flex space-x-4 mb-4">
-      <button id="askBtn" class="bg-purple-600 text-white px-4 py-2 rounded">💬 Ask</button>
-      <button id="clearBtn" class="bg-yellow-500 text-white px-4 py-2 rounded">🧹 Clear</button>
-    </div>
+  <textarea id="userInput" placeholder="Type your message..."></textarea><br>
+  <button id="askBtn">💬 Ask</button>
+  <button id="clearBtn">🧹 Clear</button>
 
-    <div id="response" class="p-4 bg-white rounded shadow mb-4 min-h-[80px]"></div>
+  <div id="responseBox">Waiting for your question...</div>
 
-    <div class="mt-6 text-center">
-      <div class="relative w-40 h-60 mx-auto">
-        <img id="kritikaStatic" src="https://thetutorpath.github.io/AI-TUTOR-DEMO2/kritika.png" alt="Kritika" class="w-full h-auto rounded-xl border border-gray-300 shadow-md">
-        <img id="kritikaTalking" src="https://media.giphy.com/media/f9k1tV7HyORcngKF8v/giphy.gif" alt="Speaking Animation" class="w-full h-auto rounded-xl border border-gray-300 shadow-md absolute top-0 left-0 hidden">
-      </div>
-    </div>
+  <div id="kritika-img">
+    <img id="kritikaImage" src="https://i.gifer.com/7efs.gif" width="120" alt="Kritika" />
+    <div><b>Kritika</b></div>
   </div>
 
   <script>
-    const inputText = document.getElementById("inputText");
-    const askBtn = document.getElementById("askBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const responseDiv = document.getElementById("response");
-    const kritikaStatic = document.getElementById("kritikaStatic");
-    const kritikaTalking = document.getElementById("kritikaTalking");
+    const apiKey = "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";
+ // 🔁 Replace this with your OpenRouter API key
+    const endpoint = "https://openrouter.ai/api/v1/chat/completions";
+    const model = "openchat/openchat-7b:free";
 
-    const API_KEY = "YOUR_API_KEY_HERE"; // 🔐 Paste your OpenRouter or OpenAI key here
+    document.getElementById("askBtn").onclick = async function () {
+      const userMessage = document.getElementById("userInput").value.trim();
+      if (!userMessage) return alert("Please enter a message.");
 
-    askBtn.addEventListener("click", async () => {
-      const message = inputText.value.trim();
-      if (!message) return;
+      document.getElementById("responseBox").innerText = "Thinking...";
+      document.getElementById("kritikaImage").src = "https://i.gifer.com/7efs.gif"; // Talking animation
 
-      responseDiv.innerHTML = "<em>Thinking...</em>";
-      const reply = await getAIResponse(message);
-      responseDiv.textContent = reply;
-      await speak(reply);
-    });
-
-    clearBtn.addEventListener("click", () => {
-      inputText.value = "";
-      responseDiv.innerHTML = "";
-    });
-
-    async function getAIResponse(userMessage) {
-      try {
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "openai/gpt-3.5-turbo",
-            messages: [{ role: "user", content: userMessage }],
-          }),
-        });
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content || "Sorry, I couldn't respond.";
-      } catch (error) {
-        console.error(error);
-        return "Error getting response from AI.";
-      }
-    }
-
-    function speak(text) {
-      return new Promise((resolve) => {
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance(text);
-        const voices = synth.getVoices();
-
-        const hindiFemaleVoice = voices.find(v =>
-          v.lang.startsWith("hi") && v.name.toLowerCase().includes("female")
-        ) || voices.find(v => v.lang.startsWith("hi")) || voices.find(v => v.name.toLowerCase().includes("female"));
-
-        if (hindiFemaleVoice) utterance.voice = hindiFemaleVoice;
-
-        utterance.onstart = () => {
-          kritikaStatic.classList.add("hidden");
-          kritikaTalking.classList.remove("hidden");
-        };
-
-        utterance.onend = () => {
-          kritikaTalking.classList.add("hidden");
-          kritikaStatic.classList.remove("hidden");
-          resolve();
-        };
-
-        synth.speak(utterance);
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://thetutorpath.github.io",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: "You are Kritika, a friendly spoken English tutor for all age groups. Help with simple, fluent answers." },
+            { role: "user", content: userMessage }
+          ]
+        })
       });
-    }
+
+      if (!response.ok) {
+        document.getElementById("responseBox").innerText = "Sorry, I couldn't respond.";
+        document.getElementById("kritikaImage").src = "https://i.postimg.cc/jdZfLsm9/kritika-still.png";
+        return;
+      }
+
+      const data = await response.json();
+      const reply = data.choices[0].message.content;
+      document.getElementById("responseBox").innerText = reply;
+
+      // Text-to-Speech
+      const utter = new SpeechSynthesisUtterance(reply);
+      utter.lang = "en-IN";
+      utter.pitch = 1.1;
+      utter.rate = 1;
+      speechSynthesis.speak(utter);
+
+      // Reset Kritika image to still
+      utter.onend = () => {
+        document.getElementById("kritikaImage").src = "https://i.postimg.cc/jdZfLsm9/kritika-still.png";
+      };
+    };
+
+    document.getElementById("clearBtn").onclick = function () {
+      document.getElementById("userInput").value = "";
+      document.getElementById("responseBox").innerText = "Waiting for your question...";
+    };
   </script>
 </body>
 </html>
